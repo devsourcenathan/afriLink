@@ -1,0 +1,127 @@
+{
+  "auth": {
+    "login": {
+      "title": "Sign in to your account",
+      "email_label": "Email Address",
+      "email_placeholder": "e.g. john{'@'}doe.com",
+      "password_label": "Password",
+      "forgot_password": "Forgot your password?",
+      "submit_btn": "Sign in securely",
+      "no_account": "Don't have an account yet?",
+      "register_link": "Create account",
+      "success": "Authentication successful",
+      "error_default": "Invalid credentials provided",
+      "subtitle": "Welcome back! Please enter your details to access your dashboard."
+    },
+    "register": {
+      "title": "Create your account",
+      "firstname_label": "First Name",
+      "firstname_placeholder": "John",
+      "lastname_label": "Last Name",
+      "lastname_placeholder": "Doe",
+      "role_label": "I want to register as a",
+      "role_entreprise": "Company (Hiring)",
+      "role_prestataire": "Freelancer (Provider)",
+      "submit_btn": "Get started",
+      "already_account": "Already have an account?",
+      "login_link": "Sign in",
+      "success": "Registration completed",
+      "success_desc": "Welcome aboard! Check your email to verify your account.",
+      "error_default": "Failed to create your account",
+      "subtitle": "Join the leading network linking Africa's best talents and companies."
+    },
+    "forgot_pass": {
+      "title": "Reset your password",
+      "desc": "No worries, we'll send you reset instructions. Please enter your email address.",
+      "submit_btn": "Send reset link",
+      "back_to_login": "Back to login",
+      "success": "Reset link sent",
+      "success_desc": "If your email is registered with us, you'll receive a secure link.",
+      "error": "Error processing request",
+      "error_desc": "An unexpected error occurred."
+    },
+    "reset_pass": {
+      "title": "Set new password",
+      "new_pass_label": "New secret password",
+      "confirm_pass_label": "Confirm your password",
+      "submit_btn": "Update password",
+      "missing_token": "The reset token is missing or invalid.",
+      "success": "Password reset successfully",
+      "success_desc": "Your new password is set. You can now log in.",
+      "error": "The reset link has expired or is invalid."
+    },
+    "verify": {
+      "title": "Verifying your email address",
+      "loading": "We are verifying your account securely...",
+      "success": "Email beautifully verified!",
+      "success_desc": "Your account is now fully active. Redirecting you to the sign in page.",
+      "error_title": "Verification Failed",
+      "btn_back": "Go back home",
+      "missing_token": "No verification token found.",
+      "invalid_token": "The verification link is either invalid or expired."
+    },
+    "validation": {
+      "invalid_email": "Please enter a valid email",
+      "req_password": "Password is required",
+      "req_firstname": "First name is crucial",
+      "req_lastname": "Last name is crucial",
+      "min_password": "Must be at least 6 letters",
+      "pass_mismatch": "Passwords do not match at all"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to your digital space, {name}!",
+    "logout": "Sign out securely"
+  },
+  "profile": {
+    "subtitle": "Profile Information",
+    "upload_avatar": "Upload photo",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "phone": "Phone Number",
+    "save": "Save profile",
+    "success": "Profile updated",
+    "error": "Failed to update profile",
+    "updateError": "Update failed",
+    "updateSuccess": "Profile successfully saved"
+  },
+  "nav": {
+    "providers": "All Providers",
+    "providerProfile": "Provider Settings"
+  },
+  "common": {
+    "unknownLocation": "Unknown location",
+    "unknown": "Unknown",
+    "more": "more",
+    "clearFilters": "Clear all filters",
+    "save": "Save Changes"
+  },
+  "provider": {
+    "findProfessionals": "Discover top talent",
+    "directorySubtitle": "Browse through our network of vetted service providers, compare their expertise, and hire the perfect match for your upcoming project.",
+    "searchSkillsPlaceholder": "Search skills (e.g. Plumbing, UX Design...)",
+    "locationPlaceholder": "City, Country",
+    "tryAdjustingSearch": "Try adjusting your search criteria or resetting filters to find better matches.",
+    "hourlyRate": "Hourly Rate",
+    "availabilityLabel": "Status",
+    "availability": "Availability",
+    "contactMe": "Get in touch",
+    "hireMe": "Propose a mission",
+    "aboutMe": "About the provider",
+    "emptyBioDetail": "This provider hasn't written a detailed biography yet.",
+    "skills": "Skills & Expertise",
+    "emptySkillsDetail": "No specific skills have been listed.",
+    "noBio": "No biography currently available for this professional.",
+    "noProvidersFound": "No profiles matched your search",
+    "subtitle": "Public profile details visible to recruiters",
+    "notAProvider": "Restricted Area",
+    "notAProviderDesc": "Please sign in with a provider account to view and manage your service offerings.",
+    "professionalInfo": "Professional Information",
+    "bio": "Detailed Biography",
+    "bioPlaceholder": "What is your work about? What have you achieved so far?...",
+    "location": "Primary Location",
+    "skillPlaceholder": "Add a new skill",
+    "noSkills": "Your skills will appear here. Add some above!"
+  }
+}

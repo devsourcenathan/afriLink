@@ -1,0 +1,127 @@
+{
+  "auth": {
+    "login": {
+      "title": "Connexion à votre espace",
+      "email_label": "Email",
+      "email_placeholder": "Ex: john{'@'}doe.com",
+      "password_label": "Mot de passe",
+      "forgot_password": "Mot de passe oublié ?",
+      "submit_btn": "Se connecter",
+      "no_account": "Pas encore de compte ?",
+      "register_link": "S'inscrire",
+      "success": "Connexion réussie",
+      "error_default": "Identifiants incorrects",
+      "subtitle": "Accédez à votre tableau de bord et reprenez vos projets là où vous les aviez laissés."
+    },
+    "register": {
+      "title": "Créez votre compte",
+      "firstname_label": "Prénom",
+      "firstname_placeholder": "John",
+      "lastname_label": "Nom",
+      "lastname_placeholder": "Doe",
+      "role_label": "Type de compte",
+      "role_entreprise": "Entreprise (Recruteur)",
+      "role_prestataire": "Indépendant (Prestataire)",
+      "submit_btn": "Créer mon compte",
+      "already_account": "Vous avez déjà un compte ?",
+      "login_link": "Connectez-vous",
+      "success": "Inscription réussie",
+      "success_desc": "Bienvenue ! Pensez à vérifier votre email.",
+      "error_default": "Erreur lors de l'inscription",
+      "subtitle": "Rejoignez Afri-Link pour développer votre réseau professionnel."
+    },
+    "forgot_pass": {
+      "title": "Mot de passe oublié ?",
+      "desc": "Entrez votre adresse email ci-dessous. Nous vous enverrons un lien sécurisé pour réinitialiser votre mot de passe.",
+      "submit_btn": "Envoyer le lien de récupération",
+      "back_to_login": "Retour à la page de connexion",
+      "success": "Demande envoyée",
+      "success_desc": "Si cet email existe, un lien vous a été envoyé.",
+      "error": "Erreur système",
+      "error_desc": "Une erreur inattendue est survenue."
+    },
+    "reset_pass": {
+      "title": "Réinitialiser votre mot de passe",
+      "new_pass_label": "Nouveau mot de passe secret",
+      "confirm_pass_label": "Confirmer le mot de passe",
+      "submit_btn": "Valider le nouveau mot de passe",
+      "missing_token": "Le jeton fourni est manquant ou invalide.",
+      "success": "Succès de la réinitialisation",
+      "success_desc": "Votre mot de passe a bien été changé. Connectez-vous.",
+      "error": "Le lien a expiré ou est invalide."
+    },
+    "verify": {
+      "title": "Vérification de l'adresse email",
+      "loading": "Vérification sécurisée en cours...",
+      "success": "Email validé avec succès !",
+      "success_desc": "Votre compte est pleinement activé. Vous allez être redirigé vers la connexion.",
+      "error_title": "Échec de la vérification",
+      "btn_back": "Retourner à l'accueil",
+      "missing_token": "Jeton de vérification introuvable.",
+      "invalid_token": "Le lien est invalide ou expiré."
+    },
+    "validation": {
+      "invalid_email": "Format d'email invalide",
+      "req_password": "Un mot de passe est requis",
+      "req_firstname": "Votre prénom est requis",
+      "req_lastname": "Votre nom est requis",
+      "min_password": "Minimum 6 caractères",
+      "pass_mismatch": "Les deux mots de passe ne correspondent pas"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de Bord",
+    "welcome": "Bienvenue sur votre espace, {name} !",
+    "logout": "Déconnexion sécurisée"
+  },
+  "profile": {
+    "subtitle": "Informations du profil",
+    "upload_avatar": "Changer d'avatar",
+    "first_name": "Prénom",
+    "last_name": "Nom",
+    "phone": "Téléphone",
+    "save": "Enregistrer le profil",
+    "success": "Profil mis à jour",
+    "error": "Erreur lors de la mise à jour",
+    "updateError": "La modification a échoué",
+    "updateSuccess": "Profil mis à jour avec succès"
+  },
+  "nav": {
+    "providers": "Tous les Prestataires",
+    "providerProfile": "Profil Prestataire"
+  },
+  "common": {
+    "unknownLocation": "Lieu inconnu",
+    "unknown": "Inconnu",
+    "more": "plus",
+    "clearFilters": "Effacer les filtres de recherche",
+    "save": "Enregistrer les modifications"
+  },
+  "provider": {
+    "findProfessionals": "Trouvez les meilleurs esprits créatifs",
+    "directorySubtitle": "Parcourez notre réseau de prestataires vérifiés, comparez leurs talents et rencontrez les profils idéals pour vos projets.",
+    "searchSkillsPlaceholder": "Quelles compétences recherchez-vous ? (ex: React, Design...)",
+    "locationPlaceholder": "Ville, Pays...",
+    "tryAdjustingSearch": "Essayez d'ajuster vos critères pour obtenir plus de résultats.",
+    "hourlyRate": "Taux horaire",
+    "availabilityLabel": "Statut",
+    "availability": "Disponibilité",
+    "contactMe": "Prendre contact",
+    "hireMe": "Proposer une mission",
+    "aboutMe": "À propos du prestataire",
+    "emptyBioDetail": "Ce prestataire n'a pas encore ajouté de longue description concernant son activité professionnelle.",
+    "skills": "Compétences & Outils",
+    "emptySkillsDetail": "Aucune compétence n'a été spécifiée.",
+    "noBio": "Aucune biographie disponible pour ce professionnel actuellement.",
+    "noProvidersFound": "Aucun profil ne correspond à votre recherche",
+    "subtitle": "Informations publiques visibles par les recruteurs",
+    "notAProvider": "Espace restreint",
+    "notAProviderDesc": "Connectez-vous avec un compte prestataire pour profiter de cette section de gestion d'offres de services.",
+    "professionalInfo": "Détails professionnels",
+    "bio": "Bio professionnelle complète",
+    "bioPlaceholder": "En quoi consiste votre travail ? Quelles sont vos réalisations phares ?...",
+    "location": "Lieu de résidence",
+    "skillPlaceholder": "Renseignez une nouvelle compétence",
+    "noSkills": "Vos compétences apparaîtront ici. Ajoutez-en de nouvelles !"
+  }
+}
