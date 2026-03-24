@@ -28,12 +28,11 @@ const schema = z.object({
 async function onSubmit() {
   loading.value = true;
   try {
-    const response = await useApi(ApiRoutes.USERS.ME, {
+    const { data } = await useApi<any>(ApiRoutes.USERS.ME, {
       method: 'PATCH',
       body: state,
     });
-    // @ts-ignore
-    authStore.updateUser(response.data.value);
+    if (data.value) authStore.updateUser(data.value);
     toast.add({ title: t('profile.success'), color: 'success' });
   } catch (error: any) {
     toast.add({ title: t('profile.error'), description: error.message, color: 'error' });
@@ -52,12 +51,11 @@ async function onFileSelected(event: Event) {
   formData.append('file', file as Blob);
 
   try {
-    const response = await useApi(ApiRoutes.USERS.AVATAR, {
+    const { data } = await useApi<any>(ApiRoutes.USERS.AVATAR, {
       method: 'POST',
       body: formData,
     });
-    // @ts-ignore
-    authStore.updateUser(response.data.value);
+    if (data.value) authStore.updateUser(data.value);
     toast.add({ title: t('profile.success'), color: 'success' });
   } catch (error) {
     toast.add({ title: t('profile.error'), color: 'error' });

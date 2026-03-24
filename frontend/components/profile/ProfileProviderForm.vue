@@ -45,13 +45,12 @@ async function onSubmit() {
       skills: state.skills ? state.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
     };
 
-    const response = await useApi(ApiRoutes.USERS.PROVIDER_PROFILE, {
+    const { data } = await useApi<any>(ApiRoutes.USERS.PROVIDER_PROFILE, {
       method: 'PATCH',
       body: payload,
     });
-    
-    // Mettre à jour le store avec le nouveau providerProfile de la réponse si possible, 
-    // ou recharger l'utilisateur
+
+    if (data.value) authStore.updateUser(data.value);
     toast.add({ title: t('profile.success') || 'Profile updated successfully', color: 'success' });
   } catch (error: any) {
     toast.add({ title: t('profile.error') || 'Error', description: error.message, color: 'error' });

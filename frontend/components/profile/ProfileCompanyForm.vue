@@ -33,12 +33,12 @@ const schema = z.object({
 async function onSubmit() {
   loading.value = true;
   try {
-    const response = await useApi(ApiRoutes.USERS.COMPANY_PROFILE, {
+    const { data } = await useApi<any>(ApiRoutes.USERS.COMPANY_PROFILE, {
       method: 'PATCH',
       body: state,
     });
-    
-    // Mettre à jour le store
+
+    if (data.value) authStore.updateUser(data.value);
     toast.add({ title: t('profile.success') || 'Profile updated successfully', color: 'success' });
   } catch (error: any) {
     toast.add({ title: t('profile.error') || 'Error', description: error.message, color: 'error' });
