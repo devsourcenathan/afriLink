@@ -1,88 +1,92 @@
 # Feature Plan: Profils utilisateurs
 
 ## 1. Feature Overview
-Mise en place de la gestion complète des profils utilisateurs selon le rôle : `PRESTATAIRE` ou `ENTREPRISE`. 
-Cela inclut l'ajout du modèle `CompanyProfile` pour les entreprises, la mise à jour des informations de base (nom, prénom, téléphone), et la gestion détaillée des profils spécifiques (bio, taux horaire, compétences pour les prestataires ; nom de l'entreprise, industrie, site web pour les entreprises).
+La feature `Profils utilisateurs` couvre la gestion du profil personnel et du profil metier selon le role de l'utilisateur authentifie.
 
+Elle permet:
+- la lecture du profil courant
+- la mise a jour des informations de base
+- l'upload d'avatar
+- la mise a jour du profil prestataire
+- la mise a jour du profil entreprise
+- l'exposition d'un profil public nettoye
 
 ## 2. User Stories
-* En tant qu'utilisateur connecté, je veux voir mon profil public.
-* En tant qu'utilisateur, je veux pouvoir modifier mes informations de base (nom, prénom, avatar, téléphone).
-* En tant que Prestataire, je veux pouvoir modifier mon profil professionnel (bio, compétences, taux horaire, localisation, disponibilité).
-* En tant qu'Entreprise, je veux pouvoir renseigner les détails de mon entreprise (nom de l'entreprise, description, site web, industrie, taille).
-* En tant que visiteur ou utilisateur, je veux pouvoir consulter le profil complet d'un Prestataire ou d'une Entreprise.
+- En tant qu'utilisateur connecte, je veux consulter mon profil complet afin de verifier mes informations.
+- En tant qu'utilisateur, je veux modifier mes informations personnelles afin de garder mon compte a jour.
+- En tant que prestataire, je veux renseigner ma bio, mes competences, ma disponibilite et mon tarif afin d'etre trouve plus facilement.
+- En tant qu'entreprise, je veux renseigner les informations de mon organisation afin de credibiliser mes demandes futures.
+- En tant que visiteur, je veux consulter un profil public sans voir d'informations sensibles.
 
 ## 3. Architecture Impact
-### Backend (NestJS)
-* **Prisma Schema** : Ajout du modèle `CompanyProfile` relié à `User`.
-* **UsersModule** : 
-  * Création/Mise à jour des profils spécifiques (`ProviderProfile` et `CompanyProfile`).
-  * Endpoint pour récupérer le profil complet (incluant le profil spécifique selon le rôle).
-  * Endpoint public `/users/:id/profile` pour récupérer un profil public.
-* **DTOs** : `UpdateProviderProfileDto`, `UpdateCompanyProfileDto`.
+### Backend
+- `UsersModule` pilote les operations de lecture et mutation des profils.
+- DTOs separes pour:
+  - `UpdateProfileDto`
+  - `UpdateProviderProfileDto`
+  - `UpdateCompanyProfileDto`
+- DTOs de reponse Swagger pour les profils prives/publics.
+- RBAC sur les endpoints de sous-profils via `RolesGuard`.
 
-### Frontend (Nuxt 3)
-* **Pages** : 
-  * `/dashboard/profile` : Affichage et modification du profil de l'utilisateur connecté (informations de base + formulaire spécifique au rôle).
-  * `/providers/:id` ou `/users/:id` : Page publique pour voir le profil d'un prestataire/entreprise.
-* **Composants** : `ProfileFormBasic`, `ProfileFormProvider`, `ProfileFormCompany`.
-* **Store (Pinia)** : Mise à jour de `auth.ts` pour parser correctement le profil spécifique intégré au endpoint `/auth/me` ou `/users/me`.
+### Frontend
+- page `frontend/pages/dashboard/profile.vue`
+- composants:
+  - `frontend/components/profile/ProfileProviderForm.vue`
+  - `frontend/components/profile/ProfileCompanyForm.vue`
+- store Pinia `auth.store.ts` alimente la vue avec le profil courant enrichi
+- types front centralises dans `frontend/types/auth.ts`
 
-## 4. Database Design (Prisma)
-### Table `CompanyProfile` (Nouvelle)
-```prisma
-model CompanyProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyName String
-  description String?  @db.Text
-  website     String?
-  industry    String?
-  size        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+## 4. Database Design
+### Tables concernees
+- `users`
+- `provider_profiles`
+- `company_profiles`
 
-  @@map("company_profiles")
-}
-```
-**Modification sur `User`** :
-```prisma
-model User {
-  // ...
-  companyProfile  CompanyProfile?
-}
-```
+### Relations
+- `users 1 -> 0..1 provider_profiles`
+- `users 1 -> 0..1 company_profiles`
+
+### Contraintes / indexes
+- `provider_profiles.userId` unique
+- `company_profiles.userId` unique
+- suppression en cascade depuis `users`
 
 ## 5. API Design
-| Méthode | Endpoint | Description | Auth Requise |
-|---|---|---|---|
-| GET | `/users/me` | Récupère le profil basique + profil spécifique | AccessToken |
-| PATCH | `/users/me` | Met à jour les infos de base (firstName, lastName, etc.) | AccessToken |
-| POST | `/users/me/avatar` | Upload de l'avatar | AccessToken |
-| PUT | `/users/me/provider-profile`| Met à jour/crée le `ProviderProfile` | AccessToken (PRESTATAIRE) |
-| PUT | `/users/me/company-profile`| Met à jour/crée le `CompanyProfile` | AccessToken (ENTREPRISE) |
-| GET | `/users/:id/profile` | Récupère le profil public complet (basique + spécifique) pour l'affichage | Non |
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/users/me` | Retourne le profil courant enrichi |
+| PATCH | `/api/users/me` | Met a jour les informations personnelles |
+| POST | `/api/users/me/avatar` | Met a jour l'avatar |
+| PATCH | `/api/users/me/provider-profile` | Cree ou met a jour le profil prestataire |
+| PATCH | `/api/users/me/company-profile` | Cree ou met a jour le profil entreprise |
+| GET | `/api/users/:id/profile` | Retourne un profil public nettoye |
 
 ## 6. Security Considerations
-* **Validation DTO** : `class-validator` strict sur les champs des profils (ex: regex url pour `website`, min/max pour `hourlyRate`).
-* **Autorisations** : Vérifier que seul un `PRESTATAIRE` peut modifier un `ProviderProfile` et une `ENTREPRISE` un `CompanyProfile`.
-* Les profils publics (via `/users/:id/profile`) ne doivent pas exposer d'informations sensibles (`passwordHash`, `refreshTokenHash`, `email` si non désiré).
+- Validation DTO stricte et normalisation des entrees (`trim`, numeric casting, URL validation).
+- Protection par `JwtAuthGuard` sur les endpoints prives.
+- Protection RBAC sur les endpoints de profils specialises.
+- Sanitization centralisee pour ne jamais exposer `passwordHash` ni `refreshTokenHash`.
+- Le profil public masque aussi les champs prives de compte.
 
 ## 7. Edge Cases
-* L'utilisateur essaie de mettre à jour le profil d'un autre rôle. (=> `403 Forbidden`).
-* Le profil spécifique n'existe pas encore lors d'un `PUT` => Création automatique par le service (Upsert).
+- utilisateur inexistant lors d'une mise a jour
+- creation implicite d'un sous-profil via `upsert`
+- tentative de creation de profil entreprise sans `companyName`
+- upload d'avatar avec type ou taille de fichier invalide
+- lecture publique d'un profil inexistant
 
 ## 8. Performance Considerations
-* Utilisation de `.include()` dans Prisma pour récupérer le `User` et son sous-profil en une seule requête DB pour `/users/me`.
+- chargement du profil enrichi via un seul `include` Prisma
+- `upsert` Prisma pour limiter les branches create/update cote service
+- rehydratation front basee sur le store utilisateur existant plutot qu'une surcharge de requetes
 
 ## 9. Test Strategy
 ### Backend
-* **Unit** : 
-  * Mock du PrismaService pour tester `upsertCompanyProfile` et `upsertProviderProfile`.
-  * Vérification de sécurité des rôles.
-* **Integration** : Test du flow Modification profil basique -> Modification profil spécifique via Supertest.
+- tests unitaires service sur sanitization, update profile, upsert provider, validation company profile
+- tests controller sur `me` et `public profile`
+- build Nest pour valider la compatibilite TypeScript stricte
 
 ### Frontend
-* Validation du formulaire avec Zod.
-* Vérification conditionnelle de l'affichage du bon formulaire selon le `user.role` dans le store.
+- tests du store profile/auth et des types enrichis
+- verification de la coherence des formulaires relies au store
+- build Nuxt a reexecuter dans un contexte avec plus de marge de temps

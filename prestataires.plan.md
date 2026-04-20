@@ -1,48 +1,104 @@
 # Feature Plan: Prestataires
 
 ## 1. Feature Overview
-La fonctionnalité "Prestataires" correspond à l'annuaire (Directory) public ou semi-public permettant aux entreprises (et autres visiteurs selon les droits) de rechercher, filtrer et consulter les fiches détaillées des prestataires de services inscrits sur la plateforme.
+La feature `Prestataires` fournit l'annuaire public des prestataires actifs de la plateforme avec recherche, filtrage, pagination et consultation d'une fiche detaillee.
+
+Elle doit servir de socle de decouverte pour les entreprises avant les features `Services`, `Demandes` et `Commandes`.
 
 ## 2. User Stories
-* En tant qu'Entreprise, je veux pouvoir parcourir la liste de tous les prestataires disponibles.
-* En tant qu'Entreprise, je veux pouvoir filtrer les prestataires par mots-clés (compétences), localisation, taux horaire ou disponibilité.
-* En tant qu'Entreprise, je veux pouvoir cliquer sur un prestataire pour voir son profil complet (bio, détails, portfolio potentiel futur).
-* En tant que Prestataire, je veux que mon profil public soit visible et bien formaté pour attirer des clients.
+- En tant qu'entreprise, je veux parcourir les prestataires disponibles afin de trouver un profil adapte a mon besoin.
+- En tant qu'entreprise, je veux filtrer par mots-cles, competences, localisation et tarif afin de gagner du temps.
+- En tant que visiteur, je veux consulter la fiche publique d'un prestataire sans voir d'informations sensibles.
+- En tant que prestataire, je veux que ma fiche publique presente clairement mon profil professionnel.
 
 ## 3. Architecture Impact
-### Backend (NestJS)
-* **UsersController / ProvidersController** : Création d'un endpoint spécialisé `GET /providers` (ou `GET /users?role=PRESTATAIRE`) qui gère la pagination, le tri et la recherche multi-critères (via Prisma).
-* **UsersService** : Implémentation de la fonction de recherche avancée avec `Prisma.UserFindManyArgs` :
-  * Filtrage sur `users.status === 'ACTIVE'`
-  * Filtrage sur les champs de la relation `providerProfile` (skills, location, etc.).
+### Backend
+- `ProvidersController` expose:
+  - le listing public pagine
+  - la fiche publique detaillee
+  - les endpoints `me/profile` pour le prestataire connecte
+- `ProvidersService` encapsule:
+  - la composition Prisma des filtres
+  - la pagination
+  - la lecture d'un profil detaille sans champs prives
+- DTOs dedies:
+  - `SearchProvidersDto`
+  - `ProviderSummaryDto`
+  - `ProviderDetailDto`
+  - `ProvidersListResponseDto`
 
-### Frontend (Nuxt 3)
-* **Pages** :
-  * `/dashboard/search` (ou `/prestataires`) : Page listant les cartes des prestataires avec filtres latéraux/supérieurs.
-  * `/prestataires/[id]` : Page affichant le détail du profil public d'un prestataire.
-* **Composants** :
-  * `ProviderCard` : Un composant UI pour afficher le résumé d'un prestataire.
-  * `ProviderFilters` : Formulaire de filtres (recherche texte, select de localisation, range de prix).
-* **API Route** : Ajout à `constants/api.routes.ts`.
+### Frontend
+- page catalogue publique: `frontend/pages/providers/index.vue`
+- page detail: `frontend/pages/providers/[id].vue`
+- compatibilite legacy: redirection de `frontend/pages/prestataires/[id].vue`
+- composant reusable: `frontend/components/providers/ProviderCard.vue`
+- types centralises: `frontend/types/providers.ts`
 
-## 4. Database Design (Prisma)
-Aucun changement majeur du schéma Prisma nécessaire car la structure `User` -> `ProviderProfile` a été mise en place dans l'Étape 2.
+## 4. Database Design
+### Tables concernees
+- `provider_profiles`
+- `users`
+
+### Relations exploitees
+- `provider_profiles.userId -> users.id`
+
+### Contraintes de selection
+- n'afficher que les prestataires:
+  - `users.role = PRESTATAIRE`
+  - `users.status = ACTIVE`
+  - `provider_profiles.availability != UNAVAILABLE`
 
 ## 5. API Design
-| Méthode | Endpoint | Description | Auth Requise |
-|---|---|---|---|
-| GET | `/api/providers` | Retourne la liste paginée et filtrée des prestataires (rôle PRESTATAIRE, statut ACTIVE). Queries : `q` (search), `location`, `minRate`, `maxRate`, `skills`, `page`, `limit`. | Oui (ou Non selon réglage public) |
-| GET | `/api/providers/:id` | Retourne les infos publiques d'un prestataire spécifique (similaire à `/users/:id/profile`). | Non |
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/providers` | Liste paginee et filtree des prestataires publics |
+| GET | `/api/providers/:id` | Detail public d'un prestataire |
+| GET | `/api/providers/me/profile` | Profil prestataire du user connecte |
+| POST | `/api/providers/me/profile` | Creation / mise a jour du profil prestataire |
 
-## 6. Security & Performance
-* L'endpoint de listing doit implémenter la **pagination obligatoirement** (limit/offset) pour ne pas crasher la BDD en cas de fort trafic ou grand nombre d'inscrits.
-* Ne pas exposer l'email, le téléphone directement sur la liste (seulement sur le profil si autorisé, ou via le système de messagerie/demande).
-* Indexation BDD : s'assurer des alias sur `ProviderProfile.location` et potentiellement `skills` (PostgreSQL supporte des GIN index sur array, mais prisma gère la recherche array par `has`).
+### Query params listing
+- `q`
+- `skills[]`
+- `location`
+- `minRate`
+- `maxRate`
+- `page`
+- `limit`
+
+## 6. Security Considerations
+- Les endpoints publics ne retournent pas `email` ni `phone`.
+- Les endpoints `me/profile` restent proteges par JWT + RBAC.
+- Validation DTO stricte sur les filtres et updates provider.
+- Pagination obligatoire avec borne max sur `limit`.
+- Correction de l'ordre des routes Nest pour eviter que `:id` intercepte `me/profile`.
 
 ## 7. Edge Cases
-* Aucun prestataire trouvé -> Afficher un empty state "Aucun prestataire ne correspond à vos critères."
-* Prestataire `SUSPENDED` ou `INACTIVE` -> Il ne doit pas apparaitre dans l'annuaire.
+- aucun prestataire trouve
+- prestataire inexistant
+- prestataire inactif ou suspendu non visible dans l'annuaire
+- `skills` transmis sous forme string unique ou array
+- `minRate` / `maxRate` absents ou partiellement renseignes
 
-## 8. Test Strategy
-* Backend : Test e2e de l'endpoint de recherche avec divers query params pour vérifier la composition Prisma.
-* Frontend : S'assurer que le rechargement des datas ne clique pas ou gère l'état de "loading" avec des skeletons.
+## 8. Performance Considerations
+- pagination Prisma avec `skip/take`
+- `count` et `findMany` executes en parallele
+- projection limitee du sous-objet `user`
+- tri stable par `hourlyRate`
+
+## 9. Test Strategy
+### Backend
+- tests service sur:
+  - filtrage avancé
+  - metadonnees de pagination
+  - absence de donnees privees
+  - create/update provider profile
+- tests controller sur:
+  - passage des DTOs de recherche
+  - fiche detaillee
+  - endpoints `me/profile`
+- build Nest pour validation TypeScript
+
+### Frontend
+- verification des routes providers dans les tests existants
+- validation du typage du contrat front `providers.ts`
+- build Nuxt a reexecuter dans un contexte avec plus de marge de temps

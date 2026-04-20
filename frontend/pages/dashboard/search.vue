@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { ApiRoutes } from '~/constants/api.routes';
 import { useApi } from '~/composables/useApi';
+import type { ProvidersListResponse } from '~/types/providers';
 
 definePageMeta({
   layout: 'dashboard',
@@ -14,7 +16,7 @@ const page = ref(1);
 
 const { data: response, pending, error, refresh } = await useAsyncData(
   'providers-search',
-  () => useApi('/providers', {
+  () => useApi<ProvidersListResponse>(ApiRoutes.PROVIDERS.LIST, {
     method: 'GET',
     query: {
       q: searchQuery.value || undefined,
@@ -28,7 +30,7 @@ const { data: response, pending, error, refresh } = await useAsyncData(
 );
 
 // We debounce the search to avoid too many requests while typing
-let debounceTimeout: any;
+let debounceTimeout: ReturnType<typeof setTimeout> | undefined;
 const triggerSearch = () => {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {

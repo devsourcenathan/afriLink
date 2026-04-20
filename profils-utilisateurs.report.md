@@ -1,46 +1,97 @@
 # Feature Report: Profils utilisateurs
 
 ## Summary
-La fonctionnalité de profils utilisateurs a été complétée avec succès. Elle gère la modification des informations de base (nom, prénom, téléphone, avatar) et ajoute le support des profils étendus selon le rôle de l'utilisateur : `PRESTATAIRE` (ProviderProfile) et `ENTREPRISE` (CompanyProfile).
+La feature `Profils utilisateurs` a ete consolidee sur le backend et le frontend pour fournir un contrat de profil coherent, fortement type et exploitable pour les prochaines features `Prestataires`, `Services` et `Demandes`.
 
 ## Backend Implementation
-* **Schema Prisma** : Ajout du modèle `CompanyProfile` rattaché à `User`. Le modèle `ProviderProfile` existait déjà mais est désormais activement géré. Une migration a été générée.
-* **UsersModule** :
-  * Mise à jour de `users.service.ts` pour implémenter les méthodes `upsertProviderProfile` et `upsertCompanyProfile`, tout en s'assurant que `findById` charge ces relations (eager loading avec `include`).
-  * Nouveaux DTOs : `UpdateProviderProfileDto` et `UpdateCompanyProfileDto`.
-  * Modification de `users.controller.ts` pour exposer `/users/me/provider-profile`, `/users/me/company-profile`, et un endpoint de lecture publique `/users/:id/profile`.
+- Ajout de DTOs de reponse Swagger dans `backend/src/users/dto/user-response.dto.ts`.
+- Renforcement des DTOs d'entree profil avec `trim`, bornes de longueur et validation plus stricte.
+- Ajustement du `UsersService` pour typer correctement les utilisateurs enrichis avec `providerProfile` et `companyProfile`.
+- Sanitization systematique du profil retourne par les endpoints `me`, `updateProfile`, `avatar`, `provider-profile`, `company-profile`.
+- Conservation du RBAC sur les endpoints specialises.
 
 ## Frontend Implementation
-* **Routes API (`api.routes.ts`)** : Ajout de `USERS.PROVIDER_PROFILE` et `USERS.COMPANY_PROFILE`.
-* **Page (`/dashboard/profile.vue`)** : Chargement conditionnel de sous-formulaires supplémentaires basés sur `authStore.currentUser.role`.
-* **Composants** :
-  * `ProfileProviderForm.vue` (pour les prestataires : bio, compétences, taux horaire, etc.)
-  * `ProfileCompanyForm.vue` (pour les entreprises : nom, description, site web, industrie, etc.)
-  * Utilisation de *Zod* pour valider les données et de *Nuxt UI* pour les composants visuels.
+- Enrichissement des types front dans `frontend/types/auth.ts` avec:
+  - `ProviderProfile`
+  - `CompanyProfile`
+  - `AuthUser` enrichi
+  - payloads de mise a jour
+- Refonte de `frontend/pages/dashboard/profile.vue` pour utiliser des appels types via `$api`.
+- Refonte des formulaires:
+  - `frontend/components/profile/ProfileProviderForm.vue`
+  - `frontend/components/profile/ProfileCompanyForm.vue`
+- Synchronisation reactive entre le store Pinia et l'etat des formulaires.
 
 ## Database Changes
-* Index sur `userId` de la table `CompanyProfile` pour accélérer les requêtes.
-* Relation onDelete Cascade depuis `User`.
+- Aucun changement Prisma applique dans ce lot.
+- La feature reutilise les structures `provider_profiles` et `company_profiles` deja presentes.
 
 ## API Documentation
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/users/me` | PATCH | MAJ des infos de base |
-| `/api/users/me/avatar` | POST | MAJ de l'avatar |
-| `/api/users/me/provider-profile`| PATCH | MAJ/Création du profil Prestataire |
-| `/api/users/me/company-profile`| PATCH | MAJ/Création du profil Entreprise |
-| `/api/users/:id/profile` | GET | Obtenir le profil public |
+- Les endpoints `Users` sont maintenant decrits avec des DTOs de reponse explicites pour Swagger:
+  - `GET /api/users/me`
+  - `PATCH /api/users/me`
+  - `POST /api/users/me/avatar`
+  - `PATCH /api/users/me/provider-profile`
+  - `PATCH /api/users/me/company-profile`
+  - `GET /api/users/:id/profile`
+
+## Tests
+- Backend:
+  - `npx jest --runInBand src/users/users.service.spec.ts src/users/users.controller.spec.ts`
+  - resultat: `2` suites passees, `10` tests passes
+- Backend build:
+  - `npx nest build`
+  - resultat: compilation OK
+- Frontend:
+  - `npx vitest run tests/auth.spec.ts`
+  - resultat: `1` fichier passe, `4` tests passes
+- Frontend build:
+  - `npm run build`
+  - resultat: non conclusif, timeout local sans erreur exploitable avant expiration
 
 ## Security Review
-* Le `UsersController` est globalement protégé par `JwtAuthGuard`. 
-* L'upsert force le `userId` à être le `user.id` identifié par le JWT, évitant toute falsification.
-* Les données non désirables (`passwordHash`, `refreshTokenHash`) sont omises des réponses API.
-* Validation forte des payloads par les DTOs (max size, isUrl, etc.).
+- Sanitization des champs sensibles centralisee.
+- DTO validation renforcee sur les inputs de profil.
+- Controle d'acces par JWT + roles sur les sous-profils.
+- Endpoint public nettoye de ses donnees privees.
 
 ## Performance Review
-* Prisma `upsert` est efficace et effectue l'opération en une étape optimisée.
-* Les relations de profils sont gérées par eager loading de manière groupée sur la requête utilisateur, évitant le problème du N+1 lors du fetch de profil initial.
+- Lecture du profil enrichi en une requete Prisma.
+- `upsert` sur les sous-profils pour un flux simple et performant.
+- Mises a jour front sans duplication inutile d'etat.
 
-## Technical Debt / Next Steps
-* Utiliser un `RolesGuard` strict sur les endpoints `PATCH me/provider-profile` et `PATCH me/company-profile` pour bloquer les appels ne provenant pas du bon rôle au niveau de l'orchestrateur.
-* Étape suivante : "3 Prestataires" où ces profils seront affichés sur la plateforme public (listing et recherche).
+## Technical Debt
+- L'upload avatar reste simule et devra etre branche sur un vrai object storage.
+- Les tests frontend ne montent pas encore les composants profile; ils valident surtout le store et le contrat type.
+- La build Nuxt de production reste a confirmer dans un environnement moins contraint que le poste local/sandbox actuel.
+
+## Feature Checkup
+### Architecture
+- OK: separation claire backend `UsersModule` / DTOs / controller / service
+- OK: separation front page / composants / store / types
+- Partiel: pas encore de couche application/domain explicite
+
+### Backend
+- OK: validation DTO
+- OK: RBAC sur les sous-profils
+- OK: Swagger present
+- OK: sanitization centralisee
+
+### Frontend
+- OK: composants reutilisables
+- OK: etat profile centralise dans Pinia
+- OK: suppression des `any` les plus critiques sur cette feature
+
+### Database
+- OK: relations et contraintes existantes reutilisees
+- OK: aucune migration necessaire pour ce lot
+
+### Performance
+- OK: requetes bornees et previsible
+- OK: `include` Prisma limite les allers-retours
+
+### Code Quality
+- OK: tests backend passes
+- OK: tests frontend passes
+- OK: build backend passe
+- Partiel: build frontend a reexecuter avec plus de marge

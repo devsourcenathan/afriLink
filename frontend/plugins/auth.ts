@@ -1,67 +1,49 @@
-/**
- * Plugin d'hydratation de l'authentification.
- * 
- * Au démarrage, si un 'access_token' cookie est trouvé mais que le store Pinia
- * est vide (ex: après un rafraîchissement de page), ce plugin appelle GET /users/me
- * pour re-populer le store et ainsi laisse l'utilisateur rester connecté.
- */
-import { defineNuxtPlugin } from '#app';
-import { useAuthStore } from '../stores/auth.store';
-import { useRuntimeConfig } from '#imports';
+import { defineNuxtPlugin, useRuntimeConfig } from '#app'
+import { ApiRoutes } from '~/constants/api.routes'
+import { useAuthStore } from '~/stores/auth.store'
+import type { AuthTokensResponse, AuthUser } from '~/types/auth'
 
 export default defineNuxtPlugin(async () => {
-    const authStore = useAuthStore();
-    const config = useRuntimeConfig();
+  const authStore = useAuthStore()
+  const config = useRuntimeConfig()
 
-    // Si le token existe en cookie mais que l'utilisateur n'est pas chargé en mémoire
-    if (authStore.accessToken && !authStore.user) {
-        try {
-            const user = await $fetch<any>('/users/me', {
-                baseURL: config.public.apiBase as string,
-                headers: {
-                    Authorization: `Bearer ${authStore.accessToken}`
-                }
-            });
+  if (!authStore.accessToken || authStore.user) {
+    return
+  }
 
-            if (user) {
-                // On réhydrate le store avec les données utilisateur
-                authStore.updateUser(user);
-            }
-        } catch (error: any) {
-            // Si le token est invalide/expiré, on tente un refresh
-            if (error?.statusCode === 401 && authStore.refreshToken) {
-                try {
-                    const res = await $fetch<{ accessToken: string; refreshToken: string; user?: any }>('/auth/refresh', {
-                        baseURL: config.public.apiBase as string,
-                        method: 'POST',
-                        headers: {
-                            Authorization: `Bearer ${authStore.refreshToken}`
-                        }
-                    });
+  try {
+    const user = await $fetch<AuthUser>(ApiRoutes.USERS.ME, {
+      baseURL: config.public.apiBase as string,
+      headers: {
+        Authorization: `Bearer ${authStore.accessToken}`,
+      },
+    })
 
-                    if (res?.accessToken) {
-                        authStore.setAuth({
-                            user: res.user,
-                            accessToken: res.accessToken,
-                            refreshToken: res.refreshToken
-                        });
+    authStore.updateUser(user)
+  } catch (error: unknown) {
+    const statusCode =
+      typeof error === 'object' && error !== null && 'statusCode' in error
+        ? (error as { statusCode?: number }).statusCode
+        : undefined
 
-                        // Recharger les infos user après refresh
-                        const user = await $fetch<any>('/users/me', {
-                            baseURL: config.public.apiBase as string,
-                            headers: {
-                                Authorization: `Bearer ${res.accessToken}`
-                            }
-                        });
-                        if (user) authStore.updateUser(user);
-                    }
-                } catch {
-                    // Refresh échoué : on déconnecte proprement
-                    authStore.clearAuth();
-                }
-            } else {
-                authStore.clearAuth();
-            }
-        }
+    if (statusCode === 401 && authStore.refreshToken) {
+      try {
+        const refreshedAuth = await $fetch<AuthTokensResponse>(ApiRoutes.AUTH.REFRESH, {
+          baseURL: config.public.apiBase as string,
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${authStore.refreshToken}`,
+          },
+        })
+
+        authStore.setAuth(refreshedAuth)
+      } catch {
+        authStore.clearAuth()
+      }
+
+      return
     }
-});
+
+    authStore.clearAuth()
+  }
+})

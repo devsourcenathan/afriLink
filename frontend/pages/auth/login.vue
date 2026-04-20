@@ -1,19 +1,19 @@
 <template>
   <div>
-    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
+    <h2 class="mb-2 text-3xl font-extrabold text-gray-900 dark:text-white">
       {{ $t('auth.login.title') }}
     </h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-8">
+    <p class="mb-8 text-sm text-gray-500 dark:text-gray-400">
       {{ $t('auth.login.subtitle') }}
     </p>
 
     <UForm :schema="schema" :state="state" class="space-y-6" @submit="onSubmit">
       <UFormField :label="$t('auth.login.email_label')" name="email">
-        <UInput 
-          v-model="state.email" 
-          type="email" 
-          icon="i-heroicons-envelope" 
-          :placeholder="$t('auth.login.email_placeholder')" 
+        <UInput
+          v-model="state.email"
+          type="email"
+          icon="i-heroicons-envelope"
+          :placeholder="$t('auth.login.email_placeholder')"
           size="lg"
           class="w-full"
         />
@@ -21,15 +21,15 @@
 
       <UFormField :label="$t('auth.login.password_label')" name="password">
         <template #hint>
-          <NuxtLink to="/auth/forgot-password" class="text-sm text-primary-600 hover:text-primary-500 font-medium">
+          <NuxtLink to="/auth/forgot-password" class="text-sm font-medium text-primary-600 hover:text-primary-500">
             {{ $t('auth.login.forgot_password') }}
           </NuxtLink>
         </template>
-        <UInput 
-          v-model="state.password" 
-          type="password" 
-          icon="i-heroicons-lock-closed" 
-          placeholder="••••••••" 
+        <UInput
+          v-model="state.password"
+          type="password"
+          icon="i-heroicons-lock-closed"
+          placeholder="********"
           size="lg"
           class="w-full"
         />
@@ -39,7 +39,7 @@
         {{ $t('auth.login.submit_btn') }}
       </UButton>
 
-      <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+      <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
         {{ $t('auth.login.no_account') }}
         <NuxtLink to="/auth/register" class="font-semibold text-primary-600 hover:text-primary-500">
           {{ $t('auth.login.register_link') }}
@@ -51,10 +51,12 @@
 
 <script setup lang="ts">
 import { z } from 'zod'
+import { ApiRoutes } from '~/constants/api.routes'
 import { useAuthStore } from '~/stores/auth.store'
+import type { AuthTokensResponse, LoginPayload } from '~/types/auth'
 
 definePageMeta({
-  layout: 'auth'
+  layout: 'auth',
 })
 
 const { $api } = useNuxtApp()
@@ -65,35 +67,39 @@ const loading = ref(false)
 
 const schema = z.object({
   email: z.string().email(t('auth.validation.invalid_email')),
-  password: z.string().min(1, t('auth.validation.req_password'))
+  password: z.string().min(1, t('auth.validation.req_password')),
 })
 
-const state = reactive({
+const state = reactive<LoginPayload>({
   email: '',
-  password: ''
+  password: '',
 })
 
 async function onSubmit() {
   loading.value = true
+
   try {
-    const res = await $api<{ user: any; accessToken: string; refreshToken: string }>('/auth/login', {
+    const response = await $api<AuthTokensResponse>(ApiRoutes.AUTH.LOGIN, {
       method: 'POST',
-      body: state
+      body: state,
     })
-    
-    authStore.setAuth({
-      user: res.user,
-      accessToken: res.accessToken,
-      refreshToken: res.refreshToken
-    })
-    
+
+    authStore.setAuth(response)
     toast.add({ title: t('auth.login.success'), color: 'success' })
-    navigateTo('/dashboard')
-  } catch (error: any) {
-    toast.add({ 
-      title: 'Erreur', 
-      description: error.response?._data?.message || t('auth.login.error_default'), 
-      color: 'error' 
+    await navigateTo('/dashboard')
+  } catch (error: unknown) {
+    const message =
+      typeof error === 'object' &&
+      error !== null &&
+      'response' in error &&
+      typeof (error as { response?: { _data?: { message?: string } } }).response?._data?.message === 'string'
+        ? (error as { response?: { _data?: { message?: string } } }).response?._data?.message
+        : t('auth.login.error_default')
+
+    toast.add({
+      title: 'Erreur',
+      description: message,
+      color: 'error',
     })
   } finally {
     loading.value = false

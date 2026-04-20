@@ -1,48 +1,50 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import { useCookie } from '#app';
+import { useCookie } from '#app'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import type { AuthTokensResponse, AuthUser } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-    // State
-    const user = ref<any>(null);
-    const accessToken = useCookie<string | null>('access_token', { default: () => null });
-    const refreshToken = useCookie<string | null>('refresh_token', { default: () => null });
-    const loading = ref<boolean>(false);
-    const error = ref<string | null>(null);
+  const cookieOptions = {
+    default: () => null,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+  }
 
-    // Getters
-    // On vérifie uniquement le cookie pour ne pas déconnecter l'utilisateur
-    // lors d'un refresh de page (le user est rechargé par le plugin auth.ts).
-    const isAuthenticated = computed(() => !!accessToken.value);
-    const currentUser = computed(() => user.value);
+  const user = ref<AuthUser | null>(null)
+  const accessToken = useCookie<string | null>('access_token', cookieOptions)
+  const refreshToken = useCookie<string | null>('refresh_token', cookieOptions)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
 
-    // Actions
-    function setAuth(data: { user: any; accessToken: string; refreshToken: string }) {
-        user.value = data.user;
-        accessToken.value = data.accessToken;
-        refreshToken.value = data.refreshToken;
-    }
+  const isAuthenticated = computed(() => !!accessToken.value)
+  const currentUser = computed(() => user.value)
 
-    function updateUser(data: any) {
-        user.value = { ...user.value, ...data };
-    }
+  function setAuth(data: AuthTokensResponse) {
+    user.value = data.user
+    accessToken.value = data.accessToken
+    refreshToken.value = data.refreshToken
+  }
 
-    function clearAuth() {
-        user.value = null;
-        accessToken.value = null;
-        refreshToken.value = null;
-    }
+  function updateUser(data: AuthUser) {
+    user.value = data
+  }
 
-    return {
-        user,
-        accessToken,
-        refreshToken,
-        loading,
-        error,
-        isAuthenticated,
-        currentUser,
-        setAuth,
-        updateUser,
-        clearAuth,
-    };
-});
+  function clearAuth() {
+    user.value = null
+    accessToken.value = null
+    refreshToken.value = null
+  }
+
+  return {
+    user,
+    accessToken,
+    refreshToken,
+    loading,
+    error,
+    isAuthenticated,
+    currentUser,
+    setAuth,
+    updateUser,
+    clearAuth,
+  }
+})
